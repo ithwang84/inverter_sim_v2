@@ -1,0 +1,12 @@
+# 태양광 인버터 시뮬레이터 의존성
+
+# 웹 서버
+Flask>=2.3.0
+flask-cors>=4.0.0
+
+# Modbus RTU 통신
+pymodbus>=3.5.0
+pyserial>=3.5
+
+# 현재는 기본 라이브러리만 사용 (enum, dataclasses, typing 등은 Python 3.7+ 내장)
+

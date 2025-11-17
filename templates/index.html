@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>태양광 인버터 시뮬레이터 - 모니터링 & 제어</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌞 태양광 인버터 시뮬레이터</h1>
+            <div class="header-info">
+                <span id="plant-id"></span>
+                <span id="update-time"></span>
+            </div>
+        </header>
+
+        <!-- 전체 발전소 요약 -->
+        <section class="summary-section">
+            <h2>발전소 전체 현황</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="card-label">총 발전량</div>
+                    <div class="card-value" id="total-power">0.00</div>
+                    <div class="card-unit">kW</div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-label">이용률</div>
+                    <div class="card-value" id="utilization">0.00</div>
+                    <div class="card-unit">%</div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-label">무효전력</div>
+                    <div class="card-value" id="reactive-power">0.00</div>
+                    <div class="card-unit">kVar</div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-label">정격용량</div>
+                    <div class="card-value" id="rated-capacity">1.00</div>
+                    <div class="card-unit">MVA</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 전체 제어 -->
+        <section class="control-section">
+            <h2>전체 제어</h2>
+            <div class="control-panel">
+                <div class="control-group">
+                    <label>전원 제어:</label>
+                    <button id="btn-all-on" class="btn btn-success">전체 ON</button>
+                    <button id="btn-all-off" class="btn btn-danger">전체 OFF</button>
+                </div>
+                <div class="control-group">
+                    <label>제어 모드:</label>
+                    <select id="control-mode-all" class="select-control">
+                        <option value="MPPT">MPPT</option>
+                        <option value="P_CONTROL">P 제어</option>
+                    </select>
+                    <button id="btn-set-mode-all" class="btn btn-primary">적용</button>
+                </div>
+                <div class="control-group">
+                    <label>P 제어 출력 (%):</label>
+                    <input type="number" id="p-control-all" class="input-control" min="0" max="100" value="100" step="1">
+                    <button id="btn-set-p-control-all" class="btn btn-primary">적용</button>
+                </div>
+                <div class="control-group">
+                    <label>일사량 (W/m²):</label>
+                    <input type="number" id="irradiance" class="input-control" min="0" max="1500" value="1000" step="10">
+                    <button id="btn-set-irradiance" class="btn btn-secondary">적용</button>
+                </div>
+                <div class="control-group">
+                    <label>온도 (°C):</label>
+                    <input type="number" id="temperature" class="input-control" min="-20" max="60" value="25" step="1">
+                    <button id="btn-set-temperature" class="btn btn-secondary">적용</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 시계열 그래프 및 시간별 누적 발전량 -->
+        <section class="chart-section">
+            <h2>발전량 시계열 그래프</h2>
+            <div class="chart-container">
+                <canvas id="powerChart"></canvas>
+            </div>
+        </section>
+
+        <!-- 시간별 누적 발전량 -->
+        <section class="hourly-section">
+            <h2>시간별 누적 발전량</h2>
+            <div id="hourly-list" class="hourly-list">
+                <!-- 동적으로 생성됨 -->
+            </div>
+        </section>
+
+        <!-- RS-485 통신 상태 -->
+        <section class="modbus-section">
+            <h2>RS-485 Modbus RTU 통신 상태</h2>
+            <div class="modbus-status">
+                <div class="modbus-info">
+                    <div class="info-item">
+                        <span class="info-label">포트:</span>
+                        <span id="modbus-port" class="info-value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">통신 속도:</span>
+                        <span id="modbus-baudrate" class="info-value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">상태:</span>
+                        <span id="modbus-status" class="status-indicator">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">슬레이브 수:</span>
+                        <span id="modbus-slaves" class="info-value">-</span>
+                    </div>
+                </div>
+                
+                <div class="modbus-slaves-grid" id="modbus-slaves-grid">
+                    <!-- 슬레이브별 통계 -->
+                </div>
+            </div>
+            
+            <div class="modbus-log-section">
+                <div class="log-header">
+                    <h3>통신 로그</h3>
+                    <button id="btn-clear-log" class="btn btn-secondary btn-sm">로그 지우기</button>
+                </div>
+                <div id="modbus-log" class="modbus-log">
+                    <!-- 통신 로그 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 인버터별 모니터링 및 제어 -->
+        <section class="inverters-section">
+            <h2>인버터별 현황</h2>
+            <div id="inverters-grid" class="inverters-grid">
+                <!-- 동적으로 생성됨 -->
+            </div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+
